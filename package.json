@@ -1,0 +1,25 @@
+{
+  "name": "cobalt-spotify",
+  "version": "1.0.0",
+  "description": "Enhancing Cobalt with Spotify Integration",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prestonarnold0/cobalt-spotify.git"
+  },
+  "keywords": [
+    "cobalt",
+    "spotify",
+    "cobalt-spotify",
+    "spotify-downloader"
+  ],
+  "author": "Preston Arnold <Arnold Development>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/prestonarnold0/cobalt-spotify/issues"
+  },
+  "homepage": "https://github.com/prestonarnold0/cobalt-spotify#readme"
+}
