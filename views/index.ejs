@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Service to MP3</title>
     <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+      rel="stylesheet"
+    />
+    <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
       crossorigin="anonymous"
@@ -23,6 +27,7 @@
         align-items: center;
         height: 100vh;
         text-align: center;
+        overflow: hidden;
       }
 
       .container {
@@ -114,6 +119,145 @@
         color: #e0e0e0;
         opacity: 0.8;
       }
+
+      .modal {
+        max-height: 80vh;
+        overflow-y: auto;
+        background-color: transparent !important;
+        color: #e0e0e0;
+      }
+
+      .modal-content {
+        background-color: rgba(0, 0, 0, 0.9) !important;
+        color: #e0e0e0;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+      }
+
+      .modal-footer {
+        background-color: rgba(0, 0, 0, 0.9) !important;
+        padding: 1.5rem;
+        border-radius: 8px;
+      }
+
+      .modal-close {
+        color: #ffeb3b;
+      }
+
+      .modal-close:hover {
+        color: #ffd54f;
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+      }
+
+      .modal-header img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 5px;
+        margin-right: 1rem;
+      }
+
+      .modal-header .modal-title {
+        font-size: 3rem;
+        flex: 1;
+      }
+
+      .modal-header .modal-subtitle {
+        color: #ccc;
+        font-size: 0.9rem;
+      }
+
+      .track-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #444;
+      }
+
+      .track-item img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 5px;
+        margin-right: 1rem;
+      }
+
+      .track-item .details {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .track-item .details h6 {
+        margin: 0;
+        color: #ffeb3b;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+      }
+
+      .track-item .details p {
+        margin: 0;
+        color: #e0e0e0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+      }
+
+      .track-item .download-icon {
+        color: #ffeb3b;
+        cursor: pointer;
+        font-size: 1.5rem;
+        margin-left: 1rem;
+      }
+
+      .track-item .download-icon:hover {
+        color: #ffd54f;
+      }
+
+      .download-all-btn {
+        background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        color: #fff;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.3s, transform 0.3s;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      .download-all-btn:hover {
+        background: linear-gradient(135deg, #ff4b2b, #ff416c);
+      }
+
+      .login-btn {
+        background: #ff5722;
+        color: #fff;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.3s, transform 0.3s;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        margin-top: 1rem;
+      }
+
+      .login-btn:hover {
+        background: #e64a19;
+      }
     </style>
   </head>
   <body>
@@ -133,9 +277,34 @@
           </button>
         </div>
       </form>
+      <button class="login-btn" onclick="window.location.href='/login'">
+        Login with Spotify
+      </button>
     </div>
     <div class="footer"><i class="fas fa-code"></i> Made by Preston Arnold</div>
 
+    <div id="playlistModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <img id="playlistImage" src="" alt="Playlist Image" />
+          <div>
+            <div id="playlistTitle" class="modal-title"></div>
+            <div id="playlistSubtitle" class="modal-subtitle"></div>
+          </div>
+          <button class="download-all-btn" id="downloadAllBtn">
+            Download All
+          </button>
+        </div>
+        <div id="playlistTracks"></div>
+        <div class="modal-footer">
+          <a href="#" class="modal-close waves-effect waves-green btn-flat"
+            >Close</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
       document
         .getElementById("urlForm")
@@ -153,7 +322,7 @@
           spinnerIcon.style.display = "block";
 
           try {
-            const response = await fetch("http://localhost:3001/api/json", {
+            const response = await fetch("/api/json", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ url }),
@@ -162,11 +331,12 @@
             if (!response.ok) throw new Error("Network response was not ok");
 
             const responseData = await response.json();
-            console.log(responseData);
             if (responseData?.data?.url) {
               window.open(responseData.data.url, "_blank");
+            } else if (responseData?.data?.tracks) {
+              showPlaylistModal(responseData.data);
             } else {
-              console.error("Response does not contain a URL.");
+              console.error("Response does not contain valid data.");
             }
           } catch (error) {
             console.error("Error:", error);
@@ -175,6 +345,106 @@
             downloadIcon.style.opacity = "1";
           }
         });
+
+      function showPlaylistModal(data) {
+        console.log(data);
+        const modalImage = document.getElementById("playlistImage");
+        const modalTitle = document.getElementById("playlistTitle");
+        const modalSubtitle = document.getElementById("playlistSubtitle");
+        const tracksContainer = document.getElementById("playlistTracks");
+        const downloadAllBtn = document.getElementById("downloadAllBtn");
+
+        modalImage.src = data.images[0].url || "default-image.png";
+        modalTitle.textContent = data.name || "Playlist";
+
+        tracksContainer.innerHTML = data.tracks.items
+          .map(
+            (track) => `
+            <div class="track-item" data-url="${
+              track.track.external_urls.spotify
+            }">
+              <img src="${
+                track.track.album.images[0]?.url || "default-image.png"
+              }" alt="${track.track.name}">
+              <div class="details">
+                <h6>${track.track.name}</h6>
+                <p>${track.track.artists
+                  .map((artist) => artist.name)
+                  .join(", ")}</p>
+              </div>
+              <i class="fas fa-download download-icon"></i>
+            </div>
+          `
+          )
+          .join("");
+
+        document
+          .querySelectorAll(".track-item .download-icon")
+          .forEach((icon) => {
+            icon.addEventListener("click", async function () {
+              const trackUrl = this.closest(".track-item").dataset.url;
+              const button = this;
+              const downloadIcon = button;
+
+              try {
+                const response = await fetch("/api/json", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ url: trackUrl }),
+                });
+
+                if (!response.ok)
+                  throw new Error("Network response was not ok");
+
+                const responseData = await response.json();
+                if (responseData?.data?.url) {
+                  window.open(responseData.data.url, "_blank");
+                } else {
+                  console.error("Response does not contain valid data.");
+                }
+              } catch (error) {
+                console.error("Error:", error);
+              }
+            });
+          });
+
+        downloadAllBtn.addEventListener("click", async function () {
+          const trackUrls = Array.from(
+            document.querySelectorAll(".track-item")
+          ).map((item) => item.dataset.url);
+
+          for (const trackUrl of trackUrls) {
+            try {
+              const response = await fetch("/api/json", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: trackUrl }),
+              });
+
+              if (!response.ok) throw new Error("Network response was not ok");
+
+              const responseData = await response.json();
+              if (responseData?.data?.url) {
+                window.open(responseData.data.url, "_blank");
+              } else {
+                console.error("Response does not contain valid data.");
+              }
+            } catch (error) {
+              console.error("Error:", error);
+            }
+          }
+        });
+
+        const instance = M.Modal.getInstance(
+          document.getElementById("playlistModal")
+        );
+        instance.open();
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        var elems = document.querySelectorAll(".modal");
+        M.Modal.init(elems, {});
+      });
     </script>
   </body>
 </html>

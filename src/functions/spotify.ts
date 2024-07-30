@@ -9,45 +9,41 @@ interface YouTubeResult {
   url: string;
 }
 
-interface MakeRequestResponse<T = any> {
+interface PlaylistResponse {
+  name: string;
+  tracks: {
+    items: any[];
+  };
+  images: any[];
+  owner: {
+    displayName: string;
+  };
+}
+
+interface MakeRequestResponse<T> {
   status: number;
   data?: T;
   error?: string;
 }
 
-function extractTrackId(url: string): string | null {
+function extractIdFromUrl(
+  url: string,
+  type: "track" | "playlist"
+): string | null {
   try {
     const urlObj = new URL(url);
-    if (
-      urlObj.hostname === "open.spotify.com" &&
-      urlObj.pathname.startsWith("/track/")
-    ) {
-      return urlObj.pathname.split("/")[2];
-    } else if (urlObj.hostname === "spotify.link") {
-      console.log("Spotify.link URLs are not yet handled.");
-      return null;
-    } else {
-      console.log("Invalid URL");
-      return null;
-    }
-  } catch (error) {
-    console.log("Error parsing URL:", error);
-    return null;
-  }
-}
+    const path = urlObj.pathname.split("/");
 
-function extractPlaylistId(url: string): string | null {
-  try {
-    const urlObj = new URL(url);
-    if (
-      urlObj.hostname === "open.spotify.com" &&
-      urlObj.pathname.startsWith("/playlist/")
-    ) {
-      return urlObj.pathname.split("/")[2];
-    } else {
-      console.log("Invalid URL");
-      return null;
+    if (urlObj.hostname === "open.spotify.com") {
+      if (type === "track" && path[1] === "track") {
+        return path[2];
+      } else if (type === "playlist" && path[1] === "playlist") {
+        return path[2];
+      }
     }
+
+    console.log("Invalid URL");
+    return null;
   } catch (error) {
     console.log("Error parsing URL:", error);
     return null;
@@ -57,20 +53,14 @@ function extractPlaylistId(url: string): string | null {
 const spotify = {
   async makeRequest(url: string): Promise<MakeRequestResponse<YouTubeResult>> {
     try {
-      const trackId = extractTrackId(url);
+      const trackId = extractIdFromUrl(url, "track");
       if (!trackId) {
-        return {
-          status: 400,
-          error: "Invalid Spotify track URL",
-        };
+        return { status: 400, error: "Invalid Spotify track URL" };
       }
 
       const trackData = await spotifyApi.getTrack(trackId);
       if (!trackData.body) {
-        return {
-          status: 404,
-          error: "Track data not found",
-        };
+        return { status: 404, error: "Track data not found" };
       }
 
       const artistNames = trackData.body.artists
@@ -81,18 +71,12 @@ const spotify = {
 
       const result = await YouTube.searchOne(query);
       if (!result) {
-        return {
-          status: 404,
-          error: "No YouTube results found",
-        };
+        return { status: 404, error: "No YouTube results found" };
       }
 
       const cobaltReq = await cobalt.makeRequest(result.url);
       if (!cobaltReq || !cobaltReq.data) {
-        return {
-          status: 500,
-          error: "Error with Cobalt request",
-        };
+        return { status: 500, error: "Error with Cobalt request" };
       }
 
       return {
@@ -100,50 +84,36 @@ const spotify = {
         data: {
           title: trackData.body.name,
           artists: trackData.body.artists.map((artist: any) => artist.name),
-          cover: trackData.body.album.images[0].url,
+          cover: trackData.body.album.images[0]?.url || "",
           url: cobaltReq.data.url,
         },
       };
     } catch (error) {
       console.error("Error processing request:", error);
-      return {
-        status: 500,
-        error: "Internal server error",
-      };
+      return { status: 500, error: "Internal server error" };
     }
   },
 
-  async getPlaylist(url: string): Promise<MakeRequestResponse<any>> {
-    // Types when I know what types
+  async getPlaylist(
+    url: string
+  ): Promise<MakeRequestResponse<PlaylistResponse>> {
     try {
-      const playlistId = extractPlaylistId(url);
+      const playlistId = extractIdFromUrl(url, "playlist");
       if (!playlistId) {
-        return {
-          status: 400,
-          error: "Invalid Spotify playlist URL",
-        };
+        return { status: 400, error: "Invalid Spotify playlist URL" };
       }
 
       const playlist = await spotifyApi.getPlaylist(playlistId);
-      const playlistBody = playlist.body;
+      const playlistBody = playlist.body as unknown as PlaylistResponse;
 
       if (!playlistBody) {
-        return {
-          status: 404,
-          error: "Playlist data not found",
-        };
+        return { status: 404, error: "Playlist data not found" };
       }
 
-      return {
-        status: 200,
-        data: playlist.body,
-      };
+      return { status: 200, data: playlistBody };
     } catch (error) {
       console.error("Error fetching playlist:", error);
-      return {
-        status: 500,
-        error: "Internal server error",
-      };
+      return { status: 500, error: "Internal server error" };
     }
   },
 };
