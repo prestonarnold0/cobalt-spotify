@@ -23,6 +23,8 @@ export const handleRequest = async (req: Request, res: Response) => {
       url.startsWith("https://spotify.link/")
     ) {
       result = await spotify.makeRequest(url);
+    } else if (url.startsWith("https://open.spotify.com/playlist/")) {
+      result = await spotify.getPlaylist(url);
     } else {
       result = await cobalt.makeRequest(url);
     }
