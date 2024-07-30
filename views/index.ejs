@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Service to MP3</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <style>
+      body {
+        background: linear-gradient(135deg, #1e2a38, #4a5d81);
+        color: #f5f5f5;
+        font-family: "Poppins", sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        text-align: center;
+      }
+
+      .container {
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+        width: 90%;
+        max-width: 400px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .container:hover {
+        transform: scale(1.02);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+      }
+
+      h1 {
+        margin-bottom: 1.5rem;
+        font-size: 2rem;
+        color: #ffeb3b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .input-container {
+        display: flex;
+        align-items: center;
+        width: 100%;
+      }
+
+      .input-container input {
+        flex: 1;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        background-color: #333;
+        color: #e0e0e0;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        transition: box-shadow 0.3s ease, background-color 0.3s ease;
+      }
+
+      .input-container input:focus {
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+        background-color: #444;
+        outline: none;
+      }
+
+      button {
+        padding: 1rem 2rem;
+        margin-left: 10px;
+        border: none;
+        border-radius: 25px;
+        font-size: 1.2rem;
+        background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        color: #fff;
+        cursor: pointer;
+        transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      button .fa-download,
+      button .fa-spinner {
+        position: absolute;
+        transition: opacity 0.3s;
+      }
+
+      button .fa-spinner {
+        display: none;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .footer {
+        margin-top: 1.5rem;
+        font-size: 0.9rem;
+        color: #e0e0e0;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1><i class="fas fa-music"></i> Service to MP3</h1>
+      <form id="urlForm">
+        <div class="input-container">
+          <input
+            type="url"
+            id="urlInput"
+            placeholder="Enter the URL"
+            required
+          />
+          <button type="submit">
+            <i class="fas fa-download"></i>
+            <i class="fas fa-spinner"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+    <div class="footer"><i class="fas fa-code"></i> Made by Preston Arnold</div>
+
+    <script>
+      document
+        .getElementById("urlForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+
+          const urlInput = document.getElementById("urlInput");
+          const button = event.target.querySelector("button");
+          const downloadIcon = button.querySelector(".fa-download");
+          const spinnerIcon = button.querySelector(".fa-spinner");
+
+          const url = urlInput.value;
+
+          downloadIcon.style.opacity = "0";
+          spinnerIcon.style.display = "block";
+
+          try {
+            const response = await fetch("http://localhost:4000/api/json", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ url }),
+            });
+
+            if (!response.ok) throw new Error("Network response was not ok");
+
+            const responseData = await response.json();
+            if (responseData?.data?.url) {
+              window.open(responseData.data.url, "_blank");
+            } else {
+              console.error("Response does not contain a URL.");
+            }
+          } catch (error) {
+            console.error("Error:", error);
+          } finally {
+            spinnerIcon.style.display = "none";
+            downloadIcon.style.opacity = "1";
+          }
+        });
+    </script>
+  </body>
+</html>

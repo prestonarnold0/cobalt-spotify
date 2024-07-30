@@ -1,5 +1,6 @@
 import { YouTube } from "youtube-sr";
 import { spotifyClient } from "../helpers/spotifyClient";
+import cobalt from "./cobalt";
 
 interface YouTubeResult {
   title: string;
@@ -69,13 +70,15 @@ const spotify = {
         };
       }
 
+      const cobaltReq = await cobalt.makeRequest(result.url);
+
       return {
         status: 200,
         data: {
           title: trackData.body.name,
           artists: trackData.body.artists.map((artist: any) => artist.name),
           cover: trackData.body.album.images[0].url,
-          url: result.url,
+          url: cobaltReq.data.url,
         },
       };
     } catch (error) {
