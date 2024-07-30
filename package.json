@@ -4,7 +4,7 @@
   "description": "Enhancing Cobalt with Spotify Integration",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/index.ts"
   },
   "repository": {
     "type": "git",
@@ -24,11 +24,17 @@
   "homepage": "https://github.com/prestonarnold0/cobalt-spotify#readme",
   "devDependencies": {
     "@types/express": "^4.17.21",
+    "@types/spotify-web-api-node": "^5.0.11",
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
   },
   "dependencies": {
     "axios": "^1.7.2",
     "ejs": "^3.1.10",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "express-validator": "^7.1.0",
+    "spotify-web-api-node": "^5.0.2",
+    "youtube-sr": "^4.3.11"
   }
 }
