@@ -1,5 +1,5 @@
 import { YouTube } from "youtube-sr";
-import { spotifyClient } from "../helpers/spotifyClient";
+import { spotifyApi } from "../index";
 import cobalt from "./cobalt";
 
 interface YouTubeResult {
@@ -65,7 +65,7 @@ const spotify = {
         };
       }
 
-      const trackData = await spotifyClient.getTrack(trackId);
+      const trackData = await spotifyApi.getTrack(trackId);
       if (!trackData.body) {
         return {
           status: 404,
@@ -124,7 +124,7 @@ const spotify = {
         };
       }
 
-      const playlist = await spotifyClient.getPlaylist(playlistId);
+      const playlist = await spotifyApi.getPlaylist(playlistId);
       const playlistBody = playlist.body;
 
       if (!playlistBody) {
